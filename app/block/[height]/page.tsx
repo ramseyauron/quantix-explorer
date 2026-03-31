@@ -2,7 +2,7 @@ import { getBlock, formatTimestamp, shortHash, formatAmount, timeAgo } from '@/l
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
-export const revalidate = 30
+export const revalidate = 0
 
 export default async function BlockPage({ params }: { params: { height: string } }) {
   const height = parseInt(params.height)

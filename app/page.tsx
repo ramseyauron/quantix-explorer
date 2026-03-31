@@ -1,7 +1,7 @@
 import { getNodeStatus, getAllBlocks, shortHash, timeAgo } from '@/lib/api'
 import Link from 'next/link'
 
-export const revalidate = 10
+export const revalidate = 0
 
 export default async function HomePage() {
   const [status, blocks] = await Promise.all([

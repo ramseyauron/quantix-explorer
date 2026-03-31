@@ -1,7 +1,7 @@
 import { getAllBlocks, shortHash, formatAmount, timeAgo } from '@/lib/api'
 import Link from 'next/link'
 
-export const revalidate = 10
+export const revalidate = 0
 
 export default async function TxsPage() {
   const blocks = await getAllBlocks()

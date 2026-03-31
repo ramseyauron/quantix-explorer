@@ -2,7 +2,7 @@ import { getAllBlocks, formatTimestamp, shortHash, formatAmount, timeAgo } from 
 import Link from 'next/link'
 
 
-export const revalidate = 30
+export const revalidate = 0
 
 export default async function TxPage({ params }: { params: { hash: string } }) {
   const hash = decodeURIComponent(params.hash)
