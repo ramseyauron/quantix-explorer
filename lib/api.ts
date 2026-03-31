@@ -1,7 +1,15 @@
-// Quantix Node API client
-// Connects to a running Quantix devnet node
+// Quantix Node API — server-side fetches go direct to node,
+// client-side fetches go through the /api/node proxy (avoids CORS).
 
-const NODE_URL = process.env.NEXT_PUBLIC_NODE_URL || 'http://127.0.0.1:8560'
+const DIRECT_URL = process.env.NODE_URL || 'http://164.68.118.17:8560'
+
+// On server: fetch directly. On client (browser): use the /api/node proxy.
+function nodeUrl(path: string): string {
+  if (typeof window === 'undefined') {
+    return `${DIRECT_URL}/${path}`
+  }
+  return `/api/node/${path}`
+}
 
 export interface BlockHeader {
   hash: string
@@ -54,48 +62,40 @@ export interface NodeStatus {
   available_endpoints: string[]
 }
 
-export async function getNodeStatus(): Promise<NodeStatus | null> {
+async function fetchNode<T>(path: string, revalidate = 10): Promise<T | null> {
   try {
-    const res = await fetch(`${NODE_URL}/`, { next: { revalidate: 5 } })
+    const url = nodeUrl(path)
+    const res = await fetch(url, {
+      next: { revalidate },
+      cache: revalidate === 0 ? 'no-store' : 'default',
+    })
     if (!res.ok) return null
     return res.json()
   } catch { return null }
+}
+
+export async function getNodeStatus(): Promise<NodeStatus | null> {
+  return fetchNode<NodeStatus>('', 5)
 }
 
 export async function getBlockCount(): Promise<number> {
-  try {
-    const res = await fetch(`${NODE_URL}/blockcount`, { next: { revalidate: 5 } })
-    if (!res.ok) return 0
-    const data = await res.json()
-    return data.count || 0
-  } catch { return 0 }
+  const data = await fetchNode<{ count: number }>('blockcount', 5)
+  return data?.count ?? 0
 }
 
 export async function getBestBlockHash(): Promise<string> {
-  try {
-    const res = await fetch(`${NODE_URL}/bestblockhash`, { next: { revalidate: 5 } })
-    if (!res.ok) return ''
-    const data = await res.json()
-    return data.hash || ''
-  } catch { return '' }
+  const data = await fetchNode<{ hash: string }>('bestblockhash', 5)
+  return data?.hash ?? ''
 }
 
 export async function getBlock(id: number): Promise<Block | null> {
-  try {
-    const res = await fetch(`${NODE_URL}/block/${id}`, { next: { revalidate: 30 } })
-    if (!res.ok) return null
-    return res.json()
-  } catch { return null }
+  return fetchNode<Block>(`block/${id}`, 30)
 }
 
 export async function getLatestTransaction(): Promise<Transaction | null> {
-  try {
-    const res = await fetch(`${NODE_URL}/latest-transaction`, { next: { revalidate: 5 } })
-    if (!res.ok) return null
-    const data = await res.json()
-    if (data.message) return null
-    return data
-  } catch { return null }
+  const data = await fetchNode<Transaction | { message: string }>('latest-transaction', 5)
+  if (!data || 'message' in data) return null
+  return data as Transaction
 }
 
 export async function getAllBlocks(): Promise<Block[]> {
@@ -110,9 +110,8 @@ export async function getAllBlocks(): Promise<Block[]> {
 
 export function shortHash(hash: string, len = 16): string {
   if (!hash) return '—'
-  const clean = hash.replace(/^GENESIS_/, 'GENESIS_')
-  if (clean.startsWith('GENESIS_')) return clean.slice(0, 20) + '...'
-  return clean.slice(0, len) + '...' + clean.slice(-8)
+  if (hash.startsWith('GENESIS_')) return hash.slice(0, 20) + '...'
+  return hash.slice(0, len) + '...' + hash.slice(-8)
 }
 
 export function formatAmount(amount: string | number): string {
