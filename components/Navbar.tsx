@@ -13,7 +13,11 @@ export default function Navbar() {
     if (!q) return
     if (/^\d+$/.test(q)) {
       router.push(`/block/${q}`)
+    } else if (q.startsWith('0x') || q.includes('_') || q.toLowerCase().includes('genesis')) {
+      // Looks like an address
+      router.push(`/address/${encodeURIComponent(q)}`)
     } else if (q.length > 20) {
+      // Could be tx hash or address
       router.push(`/tx/${encodeURIComponent(q)}`)
     }
     setQuery('')
