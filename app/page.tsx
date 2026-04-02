@@ -105,8 +105,8 @@ export default function HomePage() {
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className={`w-2 h-2 rounded-full ${online ? 'bg-qtx-green blink' : 'bg-red-500'}`} />
-              <span className="text-xs font-mono text-slate-400 uppercase tracking-widest">
+              <span className={`w-2.5 h-2.5 rounded-full ${online ? 'pulse-dot-green' : 'bg-red-500'}`} style={online ? { boxShadow: '0 0 8px #00ff88, 0 0 16px rgba(0,255,136,0.4)' } : {}} />
+              <span className="text-xs font-mono text-slate-400 uppercase tracking-widest" style={{ fontFamily: 'var(--font-heading)' }}>
                 {loading ? 'Connecting…' : online ? 'Network Online' : 'Node Offline'}
               </span>
               {lastUpdate && (
@@ -115,8 +115,8 @@ export default function HomePage() {
                 </span>
               )}
             </div>
-            <h1 className="text-2xl font-bold text-white">Quantix Devnet</h1>
-            <p className="text-slate-500 text-sm mt-0.5">Chain ID: 73310 · Post-Quantum Layer 1</p>
+            <h1 className="text-2xl font-bold text-white font-heading">Quantix Devnet</h1>
+            <p className="text-slate-500 text-sm mt-0.5 font-body">Chain ID: 73310 · Post-Quantum Layer 1</p>
           </div>
           <div className="flex gap-6">
             {[
@@ -126,8 +126,8 @@ export default function HomePage() {
               { label: 'Block Time', value: '10s', color: 'text-qtx-yellow' },
             ].map(({ label, value, color }) => (
               <div key={label} className="text-center">
-                <div className={`text-xl font-bold font-mono ${color}`}>{value}</div>
-                <div className="text-xs text-slate-500 mt-0.5">{label}</div>
+                <div className={`text-xl font-bold font-mono ${color}`} style={{ textShadow: color === 'text-qtx-cyan' ? '0 0 10px rgba(0,255,255,0.5)' : color === 'text-qtx-purple' ? '0 0 10px rgba(123,97,255,0.5)' : color === 'text-qtx-green' ? '0 0 10px rgba(0,255,136,0.5)' : 'none' }}>{value}</div>
+                <div className="text-xs text-slate-500 mt-0.5 font-body">{label}</div>
               </div>
             ))}
           </div>
@@ -143,7 +143,7 @@ export default function HomePage() {
       {/* Blocks Table */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-white">Latest Blocks</h2>
+          <h2 className="text-lg font-semibold text-white font-heading">Latest Blocks</h2>
           {online && <span className="text-xs text-slate-500 flex items-center gap-1">
             <span className="w-1.5 h-1.5 rounded-full bg-qtx-green blink inline-block" /> Live · refreshes every 10s
           </span>}
@@ -196,15 +196,15 @@ export default function HomePage() {
                       </span>
                     </td>
                     <td className="px-4 py-3 hidden lg:table-cell">
-                      <Link href={`/block/${h.height}`} className="font-mono text-xs text-slate-400 hover:text-qtx-cyan">
+                      <Link href={`/block/${h.height}`} className="font-mono text-xs text-slate-400 hover:text-qtx-cyan" style={{ fontFamily: 'JetBrains Mono, Fira Code, monospace' }}>
                         {shortHash(h.hash)}
                       </Link>
                     </td>
                     <td className="px-4 py-3 hidden lg:table-cell">
-                      <span className="font-mono text-xs text-slate-600">{shortHash(h.parent_hash)}</span>
+                      <span className="font-mono text-xs text-slate-600" style={{ fontFamily: 'JetBrains Mono, Fira Code, monospace' }}>{shortHash(h.parent_hash)}</span>
                     </td>
                     <td className="px-4 py-3 hidden xl:table-cell">
-                      <span className="font-mono text-xs text-slate-500">{shortHash(h.proposer_id || '', 10)}</span>
+                      <span className="font-mono text-xs text-slate-500" style={{ fontFamily: 'JetBrains Mono, Fira Code, monospace' }}>{shortHash(h.proposer_id || '', 10)}</span>
                     </td>
                   </tr>
                 )
@@ -218,7 +218,7 @@ export default function HomePage() {
       {online && totalTxs > 0 && (
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-semibold text-white">Recent Transactions</h2>
+            <h2 className="text-lg font-semibold text-white font-heading">Recent Transactions</h2>
             <Link href="/txs" className="text-xs text-qtx-cyan hover:underline">View all →</Link>
           </div>
           <div className="rounded-xl border border-qtx-border overflow-hidden">

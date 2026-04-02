@@ -2,15 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --font-heading: var(--font-orbitron), 'Orbitron', monospace;
+  --font-body: var(--font-exo2), 'Exo 2', sans-serif;
+}
+
 body {
   background-color: #050510;
+  font-family: var(--font-body);
+  /* Subtle animated dot pattern */
+  background-image: radial-gradient(rgba(0,255,255,0.06) 1px, transparent 1px);
+  background-size: 28px 28px;
 }
+
+.font-heading { font-family: var(--font-heading); }
+.font-body { font-family: var(--font-body); }
 
 .mono { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
 
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 8px rgba(0,212,255,0.3); }
-  50% { box-shadow: 0 0 20px rgba(0,212,255,0.6); }
+  0%, 100% { box-shadow: 0 0 8px rgba(0,255,255,0.3); }
+  50% { box-shadow: 0 0 20px rgba(0,255,255,0.6); }
 }
 .pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
 
@@ -19,3 +31,58 @@ body {
   50% { opacity: 0.3; }
 }
 .blink { animation: blink 1.4s ease-in-out infinite; }
+
+@keyframes pulse-dot-green {
+  0%, 100% { box-shadow: 0 0 4px #00ff88, 0 0 10px #00ff88; }
+  50% { box-shadow: 0 0 8px #00ff88, 0 0 20px #00ff88, 0 0 30px rgba(0,255,136,0.4); }
+}
+.pulse-dot-green {
+  background: #00ff88;
+  animation: pulse-dot-green 1.8s ease-in-out infinite;
+}
+
+/* Table row hover glow */
+tbody tr {
+  transition: all 0.2s ease;
+}
+tbody tr:hover {
+  background: rgba(0,255,255,0.04) !important;
+  box-shadow: inset 0 0 20px rgba(0,255,255,0.05);
+}
+
+/* IN/OUT badges */
+.badge-in {
+  background: rgba(0,255,136,0.12);
+  color: #00ff88;
+  border: 1px solid rgba(0,255,136,0.3);
+  text-shadow: 0 0 8px rgba(0,255,136,0.6);
+  box-shadow: 0 0 6px rgba(0,255,136,0.2);
+}
+.badge-out {
+  background: rgba(255,0,255,0.12);
+  color: #FF00FF;
+  border: 1px solid rgba(255,0,255,0.3);
+  text-shadow: 0 0 8px rgba(255,0,255,0.6);
+  box-shadow: 0 0 6px rgba(255,0,255,0.2);
+}
+
+/* Glow border cards */
+.glow-card {
+  border: 1px solid rgba(0,255,255,0.2);
+  background: rgba(5,5,16,0.8);
+  transition: all 0.2s ease;
+}
+.glow-card:hover {
+  border-color: rgba(0,255,255,0.5);
+  box-shadow: 0 0 20px rgba(0,255,255,0.15), inset 0 0 20px rgba(0,255,255,0.03);
+}
+
+.glow-card-purple {
+  border: 1px solid rgba(123,97,255,0.2);
+  background: rgba(5,5,16,0.8);
+  transition: all 0.2s ease;
+}
+.glow-card-purple:hover {
+  border-color: rgba(123,97,255,0.5);
+  box-shadow: 0 0 20px rgba(123,97,255,0.15), inset 0 0 20px rgba(123,97,255,0.03);
+}

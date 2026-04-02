@@ -132,6 +132,8 @@ export default function AddressPage() {
               value: formatQTX(balance),
               sub: `≈ ${(Number(BigInt(balance >= 0 ? balance : 0)) / 1e18).toFixed(4)} QTX`,
               color: 'text-qtx-cyan',
+              glowColor: 'rgba(0,255,255,0.15)',
+              borderColor: 'rgba(0,255,255,0.3)',
               icon: '◈',
             },
             {
@@ -139,13 +141,17 @@ export default function AddressPage() {
               value: formatQTX(received),
               sub: `${txs.filter(t => t.direction === 'in').length} inbound txs`,
               color: 'text-qtx-green',
+              glowColor: 'rgba(0,255,136,0.15)',
+              borderColor: 'rgba(0,255,136,0.3)',
               icon: '↙',
             },
             {
               label: 'Total Sent',
               value: formatQTX(sent),
               sub: `${txs.filter(t => t.direction === 'out').length} outbound txs`,
-              color: 'text-qtx-red',
+              color: 'text-red-400',
+              glowColor: 'rgba(255,80,80,0.1)',
+              borderColor: 'rgba(255,80,80,0.25)',
               icon: '↗',
             },
             {
@@ -153,15 +159,25 @@ export default function AddressPage() {
               value: txCount.toLocaleString(),
               sub: 'total interactions',
               color: 'text-qtx-purple',
+              glowColor: 'rgba(123,97,255,0.15)',
+              borderColor: 'rgba(123,97,255,0.3)',
               icon: '⇄',
             },
-          ].map(({ label, value, sub, color, icon }) => (
-            <div key={label} className="bg-qtx-bg/50 rounded-xl p-4 border border-qtx-border/50">
+          ].map(({ label, value, sub, color, glowColor, borderColor, icon }) => (
+            <div key={label} className="rounded-xl p-4 transition-all duration-200"
+              style={{
+                background: 'rgba(5,5,16,0.8)',
+                border: `1px solid ${borderColor}`,
+                boxShadow: `0 0 15px ${glowColor}`,
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = `0 0 25px ${glowColor}, inset 0 0 15px ${glowColor.replace('0.15', '0.05')}` }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = `0 0 15px ${glowColor}` }}
+            >
               <div className="flex items-center gap-1.5 mb-2">
                 <span className={`${color} text-lg`}>{icon}</span>
                 <span className="text-xs text-slate-500">{label}</span>
               </div>
-              <div className={`text-base font-bold font-mono ${color} leading-tight`}>{value}</div>
+              <div className={`text-base font-bold font-mono ${color} leading-tight`} style={{ textShadow: `0 0 8px ${glowColor.replace('0.15', '0.6')}` }}>{value}</div>
               <div className="text-xs text-slate-600 mt-0.5">{sub}</div>
             </div>
           ))}
@@ -246,12 +262,10 @@ export default function AddressPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3 hidden lg:table-cell">
-                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                      tx.direction === 'in'
-                        ? 'bg-qtx-green/10 text-qtx-green border border-qtx-green/20'
-                        : 'bg-red-500/10 text-red-400 border border-red-500/20'
+                    <span className={`px-2 py-0.5 rounded text-xs font-bold font-mono ${
+                      tx.direction === 'in' ? 'badge-in' : 'badge-out'
                     }`}>
-                      {tx.direction === 'in' ? 'IN' : 'OUT'}
+                      {tx.direction === 'in' ? '▼ IN' : '▲ OUT'}
                     </span>
                   </td>
                 </tr>
