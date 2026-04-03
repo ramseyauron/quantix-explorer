@@ -50,6 +50,7 @@ export default function Navbar() {
         <div className="hidden md:flex items-center gap-4 text-sm text-slate-500 font-body">
           <Link href="/" className="hover:text-qtx-cyan transition-colors">Blocks</Link>
           <Link href="/txs" className="hover:text-qtx-cyan transition-colors">Txns</Link>
+          <Link href="/validators" className="hover:text-qtx-purple transition-colors">Validators</Link>
           <a href="https://github.com/ramseyauron/quantix" target="_blank" rel="noopener noreferrer"
              className="hover:text-qtx-cyan transition-colors">GitHub</a>
         </div>

@@ -6,6 +6,8 @@ interface BlockInfo {
   block_count: number
   best_block_hash: string
   genesis_block_hash: string
+  synced?: boolean
+  sync_state?: string
 }
 
 interface Block {
@@ -29,6 +31,12 @@ interface Tx {
   nonce: number
   gas_limit: string | number
   timestamp: number
+}
+
+interface Validator {
+  address: string
+  stake: string | number
+  status: string
 }
 
 function shortHash(h: string, n = 14) {
@@ -57,6 +65,7 @@ function timeAgo(ts: number) {
 export default function HomePage() {
   const [status, setStatus] = useState<BlockInfo | null>(null)
   const [blocks, setBlocks] = useState<Block[]>([])
+  const [validators, setValidators] = useState<Validator[]>([])
   const [loading, setLoading] = useState(true)
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
   const [online, setOnline] = useState(false)
@@ -83,6 +92,15 @@ export default function HomePage() {
       )
       const fetched = (await Promise.all(blockPromises)).filter(Boolean) as Block[]
       setBlocks(fetched.reverse())
+
+      // Fetch validators (may not exist yet)
+      try {
+        const valRes = await fetch('/api/node/validators', { cache: 'no-store' })
+        if (valRes.ok) {
+          const valData = await valRes.json()
+          setValidators(valData.validators || valData || [])
+        }
+      } catch { /* validators endpoint may not be live yet */ }
     } catch {
       setOnline(false)
     } finally {
@@ -97,6 +115,10 @@ export default function HomePage() {
   }, [fetchData])
 
   const totalTxs = blocks.reduce((s, b) => s + (b.body?.txs_list?.length || 0), 0)
+  const currentHeight = status?.block_count ?? 0
+  const isSynced = status?.synced !== false // default true if not specified
+  const syncLabel = isSynced ? 'Synced' : 'Syncing…'
+  const activeValidators = validators.filter(v => v.status === 'active' || v.status === 'Active').length
 
   return (
     <div className="space-y-8">
@@ -109,6 +131,11 @@ export default function HomePage() {
               <span className="text-xs font-mono text-slate-400 uppercase tracking-widest" style={{ fontFamily: 'var(--font-heading)' }}>
                 {loading ? 'Connecting…' : online ? 'Network Online' : 'Node Offline'}
               </span>
+              {online && (
+                <span className={`text-xs px-2 py-0.5 rounded-full border font-mono ml-1 ${isSynced ? 'text-qtx-green border-qtx-green/30 bg-qtx-green/10' : 'text-qtx-yellow border-qtx-yellow/30 bg-qtx-yellow/10'}`}>
+                  {syncLabel}
+                </span>
+              )}
               {lastUpdate && (
                 <span className="text-xs text-slate-600 ml-2">
                   Updated {timeAgo(Math.floor(lastUpdate.getTime() / 1000))}
@@ -120,7 +147,7 @@ export default function HomePage() {
           </div>
           <div className="flex gap-6">
             {[
-              { label: 'Blocks', value: status?.block_count?.toLocaleString() ?? '—', color: 'text-qtx-cyan' },
+              { label: 'Block Height', value: currentHeight > 0 ? `#${currentHeight.toLocaleString()}` : '—', color: 'text-qtx-cyan' },
               { label: 'Transactions', value: totalTxs.toLocaleString(), color: 'text-qtx-purple' },
               { label: 'Consensus', value: 'PBFT+PoS', color: 'text-qtx-green' },
               { label: 'Block Time', value: '10s', color: 'text-qtx-yellow' },
@@ -138,6 +165,62 @@ export default function HomePage() {
             <span className="font-mono text-xs text-qtx-cyan break-all">{status.genesis_block_hash}</span>
           </div>
         )}
+      </div>
+
+      {/* Validator Set */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-semibold text-white font-heading">Validator Set</h2>
+          <Link href="/validators" className="text-xs text-qtx-purple hover:underline">View all →</Link>
+        </div>
+        <div className="rounded-xl border border-qtx-border bg-qtx-surface/50 p-5">
+          <div className="flex items-center gap-6 flex-wrap mb-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold font-mono text-qtx-purple" style={{ textShadow: '0 0 10px rgba(123,97,255,0.5)' }}>
+                {validators.length > 0 ? (activeValidators > 0 ? activeValidators : validators.length) : (online ? '—' : '—')}
+              </div>
+              <div className="text-xs text-slate-500 mt-0.5">Active Validators</div>
+            </div>
+            <div className="text-slate-600 text-lg">/</div>
+            <div className="text-center">
+              <div className="text-2xl font-bold font-mono text-slate-400">21</div>
+              <div className="text-xs text-slate-500 mt-0.5">Max Active Set</div>
+            </div>
+            {validators.length > 0 && (
+              <div className="flex-1 min-w-48">
+                <div className="h-2 bg-qtx-border rounded-full overflow-hidden">
+                  <div className="h-full rounded-full bg-gradient-to-r from-qtx-purple to-qtx-cyan"
+                    style={{ width: `${Math.min(100, (validators.length / 21) * 100)}%` }} />
+                </div>
+                <div className="text-xs text-slate-600 mt-1">{validators.length} / 21 slots filled</div>
+              </div>
+            )}
+          </div>
+          {validators.length > 0 ? (
+            <div className="space-y-2">
+              {validators.slice(0, 5).map((v, i) => (
+                <div key={i} className="flex items-center justify-between p-2 rounded-lg bg-qtx-bg/50 border border-qtx-border/50">
+                  <span className="font-mono text-xs text-slate-400">{shortHash(v.address, 16)}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="font-mono text-xs text-qtx-green">{formatQTX(v.stake)}</span>
+                    <span className={`text-xs px-2 py-0.5 rounded-full border ${v.status === 'active' || v.status === 'Active' ? 'text-qtx-green border-qtx-green/30 bg-qtx-green/10' : 'text-qtx-yellow border-qtx-yellow/30 bg-qtx-yellow/10'}`}>
+                      {v.status || 'active'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+              {validators.length > 5 && (
+                <Link href="/validators" className="text-xs text-qtx-purple hover:underline block text-center pt-1">
+                  + {validators.length - 5} more validators
+                </Link>
+              )}
+            </div>
+          ) : (
+            <div className="text-slate-600 text-sm text-center py-2">
+              {online ? 'Validator data loading…' : 'Node offline'}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Blocks Table */}
@@ -260,3 +343,4 @@ export default function HomePage() {
     </div>
   )
 }
+
