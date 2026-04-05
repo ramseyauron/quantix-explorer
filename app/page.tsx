@@ -58,7 +58,7 @@ function formatQTX(a: string | number) {
 }
 
 function timeAgo(ts: number) {
-  if (!ts) return '—'
+  if (!ts || ts < 1_000_000) return '—'
   const s = Math.floor(Date.now() / 1000) - ts
   if (s < 5) return 'just now'
   if (s < 60) return `${s}s ago`
@@ -69,10 +69,10 @@ function timeAgo(ts: number) {
 
 function StatCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <div className="px-5 py-4 border-r border-qtx-border last:border-r-0 flex flex-col gap-1">
-      <div className="text-xs text-qtx-dim uppercase tracking-wide font-medium">{label}</div>
-      <div className="text-lg font-bold text-qtx-text font-mono">{value}</div>
-      {sub && <div className="text-xs text-qtx-dim">{sub}</div>}
+    <div className="px-4 py-4 border-r border-qtx-border last:border-r-0 flex flex-col gap-1 min-w-0">
+      <div className="text-xs text-qtx-dim uppercase tracking-wide font-medium truncate">{label}</div>
+      <div className="text-base sm:text-lg font-bold text-qtx-text font-mono truncate">{value}</div>
+      {sub && <div className="text-xs text-qtx-dim truncate">{sub}</div>}
     </div>
   )
 }
@@ -82,6 +82,7 @@ export default function HomePage() {
   const [blocks, setBlocks] = useState<Block[]>([])
   const [loading, setLoading] = useState(true)
   const [online, setOnline] = useState(false)
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
   const [query, setQuery] = useState('')
 
   const fetchData = useCallback(async () => {
@@ -104,6 +105,7 @@ export default function HomePage() {
       )
       const fetched = (await Promise.all(promises)).filter(Boolean) as Block[]
       setBlocks(fetched.reverse())
+      setLastUpdated(new Date())
     } catch {
       setOnline(false)
     } finally {
@@ -113,7 +115,7 @@ export default function HomePage() {
 
   useEffect(() => {
     fetchData()
-    const iv = setInterval(fetchData, 10000)
+    const iv = setInterval(fetchData, 15000)
     return () => clearInterval(iv)
   }, [fetchData])
 
@@ -133,15 +135,15 @@ export default function HomePage() {
   }
 
   return (
-    <div className="-mx-4 -mt-6">
+    <div className="-mx-4 sm:-mx-6 lg:-mx-8 -mt-6">
       {/* Hero / Search section */}
-      <div className="search-hero px-4">
+      <div className="search-hero px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-white mb-1">
+          <div className="mb-4 sm:mb-6">
+            <h1 className="text-xl sm:text-2xl font-bold text-white mb-1">
               Quantix Blockchain Explorer
             </h1>
-            <p className="text-qtx-dim text-sm">
+            <p className="text-qtx-dim text-sm hidden sm:block">
               Post-quantum Layer 1 · SPHINCS+ · Devnet · Chain ID 73310
             </p>
           </div>
@@ -150,17 +152,17 @@ export default function HomePage() {
               type="text"
               value={query}
               onChange={e => setQuery(e.target.value)}
-              placeholder="Search by Block Height, Transaction Hash, or Address"
-              className="flex-1 bg-white/5 border border-qtx-border2 border-r-0 rounded-l-lg px-5 py-3 text-sm text-qtx-text placeholder-qtx-dim focus:outline-none focus:border-qtx-cyan focus:ring-1 focus:ring-qtx-cyan/30 transition-all"
+              placeholder="Search blocks, txs, addresses..."
+              className="flex-1 bg-white/5 border border-qtx-border2 border-r-0 rounded-l-lg px-4 sm:px-5 py-2.5 sm:py-3 text-sm text-qtx-text placeholder-qtx-dim focus:outline-none focus:border-qtx-cyan focus:ring-1 focus:ring-qtx-cyan/30 transition-all min-w-0"
             />
             <button
               type="submit"
-              className="px-6 py-3 bg-qtx-cyan text-black text-sm font-semibold rounded-r-lg hover:bg-qtx-cyan-light transition-colors shrink-0"
+              className="px-4 sm:px-6 py-2.5 sm:py-3 bg-qtx-cyan text-black text-sm font-semibold rounded-r-lg hover:bg-qtx-cyan-light transition-colors shrink-0"
             >
               Search
             </button>
           </form>
-          <p className="text-xs text-qtx-dim mt-2">
+          <p className="text-xs text-qtx-dim mt-2 hidden sm:block">
             Supported: Block Height (number), Tx Hash (long string), Address (64-char hex)
           </p>
         </div>
@@ -195,9 +197,14 @@ export default function HomePage() {
       </div>
 
       {/* Main content */}
-      <div className="max-w-7xl mx-auto px-4 pt-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+        {lastUpdated && (
+          <div className="text-xs text-qtx-dim mb-3 text-right">
+            Last updated: {lastUpdated.toLocaleTimeString()}
+          </div>
+        )}
         {loading ? (
-          <div className="grid lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {[0, 1].map(i => (
               <div key={i} className="qtx-card animate-pulse">
                 <div className="p-4 border-b border-qtx-border h-12 bg-qtx-surface2" />
@@ -216,7 +223,7 @@ export default function HomePage() {
             <p className="text-qtx-dim text-sm">Unable to connect to the Quantix node at 164.68.118.17:8560</p>
           </div>
         ) : (
-          <div className="grid lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Latest Blocks */}
             <div className="qtx-card">
               <div className="flex items-center justify-between px-4 py-3 border-b border-qtx-border bg-qtx-surface">
@@ -235,8 +242,8 @@ export default function HomePage() {
                   return (
                     <div key={b.header.height} className="flex items-center gap-3 px-4 py-3 border-b border-qtx-border last:border-b-0 hover:bg-white/[0.02] transition-colors">
                       {/* Block icon */}
-                      <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-qtx-surface2 border border-qtx-border2 flex flex-col items-center justify-center">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" strokeWidth="1.5">
+                      <div className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-qtx-surface2 border border-qtx-border2 flex flex-col items-center justify-center">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" strokeWidth="1.5">
                           <rect x="3" y="3" width="18" height="18" rx="2"/>
                           <path d="M3 9h18M9 21V9"/>
                         </svg>
@@ -290,20 +297,20 @@ export default function HomePage() {
                 ) : allTxs.slice(0, 10).map((tx, i) => (
                   <div key={`${tx.id}-${i}`} className="flex items-center gap-3 px-4 py-3 border-b border-qtx-border last:border-b-0 hover:bg-white/[0.02] transition-colors">
                     {/* Tx icon */}
-                    <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-qtx-surface2 border border-qtx-border2 flex items-center justify-center">
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="1.5">
+                    <div className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-qtx-surface2 border border-qtx-border2 flex items-center justify-center">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="1.5">
                         <path d="M7 16L3 12l4-4M17 8l4 4-4 4M14 4l-4 16"/>
                       </svg>
                     </div>
                     {/* Tx info */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-baseline gap-2">
-                        <Link href={`/tx/${encodeURIComponent(tx.id)}`} className="text-qtx-cyan font-mono text-xs hover:text-qtx-cyan-light truncate max-w-[140px]">
+                      <div className="flex items-center gap-2">
+                        <Link href={`/tx/${encodeURIComponent(tx.id)}`} className="text-qtx-cyan font-mono text-xs hover:text-qtx-cyan-light truncate max-w-[120px] sm:max-w-[150px]">
                           {shortHash(tx.id, 10, 6)}
                         </Link>
-                        <span className="badge badge-method shrink-0">Transfer</span>
+                        <span className="badge badge-method shrink-0 hidden sm:inline-flex">Transfer</span>
                       </div>
-                      <div className="text-xs text-qtx-dim mt-0.5">
+                      <div className="text-xs text-qtx-dim mt-0.5 truncate">
                         Block{' '}
                         <Link href={`/block/${(tx as any).blockHeight}`} className="text-qtx-muted hover:text-qtx-cyan">
                           #{(tx as any).blockHeight}
@@ -313,12 +320,12 @@ export default function HomePage() {
                     </div>
                     {/* From/To + Amount */}
                     <div className="text-right shrink-0">
-                      <div className="text-xs text-qtx-dim">
+                      <div className="text-xs text-qtx-dim hidden sm:block">
                         <span className="font-mono">{shortHash(tx.sender, 6, 4)}</span>
                         {' → '}
                         <span className="font-mono">{shortHash(tx.receiver, 6, 4)}</span>
                       </div>
-                      <div className="text-xs text-qtx-green mt-0.5 font-mono font-medium">
+                      <div className="text-xs text-qtx-green font-mono font-medium">
                         {formatQTX(tx.amount)}
                       </div>
                     </div>

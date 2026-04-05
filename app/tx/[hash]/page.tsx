@@ -30,6 +30,7 @@ function formatFee(gasLimit: string | number, gasPrice: string | number) {
 }
 
 function timeAgo(ts: number) {
+  if (!ts || ts < 1_000_000) return '—'
   const s = Math.floor(Date.now() / 1000) - ts
   if (s < 60) return `${s} secs ago`
   if (s < 3600) return `${Math.floor(s / 60)} mins ago`
@@ -137,14 +138,14 @@ export default function TxPage() {
             #{h.height}
           </Link>
           <span className="text-qtx-dim text-xs ml-3">
-            {Math.floor(Date.now() / 1000) - h.timestamp > 0
-              ? `${Math.floor(Date.now() / 1000) - h.timestamp} secs ago`
+            {h.timestamp && h.timestamp > 1_000_000
+              ? timeAgo(h.timestamp)
               : ''
             }
           </span>
         </Row>
         <Row label="Timestamp">
-          <span>{new Date(h.timestamp * 1000).toUTCString()}</span>
+          <span>{h.timestamp && h.timestamp > 1_000_000 ? new Date(h.timestamp * 1000).toUTCString() : '—'}</span>
           <span className="text-qtx-dim text-xs ml-2">({timeAgo(h.timestamp)})</span>
         </Row>
         <Row label="From">

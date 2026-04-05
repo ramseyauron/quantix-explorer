@@ -12,7 +12,6 @@ export default function Navbar() {
     e.preventDefault()
     const q = query.trim()
     if (!q) return
-    // Smart routing: numeric = block, 64-char hex = address, anything long = tx
     if (/^\d+$/.test(q)) {
       router.push(`/block/${q}`)
     } else if (/^[0-9a-fA-F]{64}$/.test(q)) {
@@ -33,22 +32,22 @@ export default function Navbar() {
 
   return (
     <>
-      {/* Top stats bar */}
+      {/* Top stats bar — hidden on mobile */}
       <div className="stats-bar hidden sm:block">
-        <div className="max-w-7xl mx-auto px-4 flex items-center gap-6 text-xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-6 text-xs">
           <span className="flex items-center gap-1.5">
             <span className="live-dot" />
             <span className="text-qtx-green font-medium">Devnet</span>
           </span>
           <span className="text-qtx-dim">Chain ID: <span className="text-qtx-muted">73310</span></span>
-          <span className="text-qtx-dim">Consensus: <span className="text-qtx-muted">PBFT+PoS</span></span>
-          <span className="text-qtx-dim">Signatures: <span className="text-qtx-muted">SPHINCS+</span></span>
+          <span className="text-qtx-dim hidden md:inline">Consensus: <span className="text-qtx-muted">PBFT+PoS</span></span>
+          <span className="text-qtx-dim hidden md:inline">Signatures: <span className="text-qtx-muted">SPHINCS+</span></span>
         </div>
       </div>
 
       {/* Main navbar */}
       <nav className="sticky top-0 z-50 bg-qtx-bg/95 backdrop-blur border-b border-qtx-border">
-        <div className="max-w-7xl mx-auto px-4 h-14 flex items-center gap-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center gap-4">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 shrink-0">
             <svg width="26" height="26" viewBox="0 0 32 32" fill="none">
@@ -62,7 +61,7 @@ export default function Navbar() {
             </div>
           </Link>
 
-          {/* Nav links */}
+          {/* Nav links — hidden on mobile */}
           <div className="hidden md:flex items-center gap-5">
             {navLinks.map(({ href, label }) => (
               <Link
@@ -75,7 +74,6 @@ export default function Navbar() {
                 {label}
               </Link>
             ))}
-            {/* Tokens (coming soon) */}
             <span
               className="text-sm font-medium text-qtx-dim/50 cursor-not-allowed relative group"
               title="Coming Soon"
@@ -87,8 +85,8 @@ export default function Navbar() {
             </span>
           </div>
 
-          {/* Network badge */}
-          <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded bg-qtx-surface border border-qtx-border2 text-xs">
+          {/* Network badge — hidden on mobile and small screens */}
+          <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded bg-qtx-surface border border-qtx-border2 text-xs shrink-0">
             <span className="live-dot" style={{width:'5px',height:'5px'}} />
             <span className="text-qtx-muted font-medium">Devnet · Chain 73310</span>
           </div>
@@ -103,7 +101,7 @@ export default function Navbar() {
                 type="text"
                 value={query}
                 onChange={e => setQuery(e.target.value)}
-                placeholder="Search by block / tx hash / address"
+                placeholder="Search blocks, txs, addresses..."
                 className="w-full bg-qtx-surface border border-qtx-border2 rounded-md pl-9 pr-4 py-2 text-sm text-qtx-text placeholder-qtx-dim focus:outline-none focus:border-qtx-cyan focus:ring-1 focus:ring-qtx-cyan/30 transition-all"
               />
             </div>

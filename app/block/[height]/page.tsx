@@ -20,6 +20,7 @@ function formatQTX(a: string | number) {
 }
 
 function timeAgo(ts: number) {
+  if (!ts || ts < 1_000_000) return '—'
   const s = Math.floor(Date.now() / 1000) - ts
   if (s < 60) return `${s} secs ago`
   if (s < 3600) return `${Math.floor(s / 60)} mins ago`
@@ -28,6 +29,7 @@ function timeAgo(ts: number) {
 }
 
 function formatTimestamp(ts: number) {
+  if (!ts || ts < 1_000_000) return '—'
   return new Date(ts * 1000).toUTCString()
 }
 
@@ -94,17 +96,17 @@ export default function BlockPage() {
       </div>
 
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-xl font-bold text-white">Block <span className="text-qtx-cyan font-mono">#{h.height}</span></h1>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           {heightNum > 0 && (
             <Link href={`/block/${heightNum - 1}`}
-              className="px-3 py-1.5 text-xs border border-qtx-border2 rounded bg-qtx-surface text-qtx-muted hover:border-qtx-cyan hover:text-qtx-cyan transition-colors">
+              className="px-3 py-1.5 min-h-[36px] text-xs border border-qtx-border2 rounded bg-qtx-surface text-qtx-muted hover:border-qtx-cyan hover:text-qtx-cyan transition-colors flex items-center">
               ← Prev
             </Link>
           )}
           <Link href={`/block/${heightNum + 1}`}
-            className="px-3 py-1.5 text-xs border border-qtx-border2 rounded bg-qtx-surface text-qtx-muted hover:border-qtx-cyan hover:text-qtx-cyan transition-colors">
+            className="px-3 py-1.5 min-h-[36px] text-xs border border-qtx-border2 rounded bg-qtx-surface text-qtx-muted hover:border-qtx-cyan hover:text-qtx-cyan transition-colors flex items-center">
             Next →
           </Link>
         </div>

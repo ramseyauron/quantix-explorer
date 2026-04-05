@@ -40,7 +40,7 @@ function formatFee(gasLimit: string | number, gasPrice?: string | number) {
 }
 
 function timeAgo(ts: number) {
-  if (!ts) return '—'
+  if (!ts || ts < 1_000_000) return '—'
   const s = Math.floor(Date.now() / 1000) - ts
   if (s < 60) return `${s}s ago`
   if (s < 3600) return `${Math.floor(s / 60)}m ago`
@@ -76,7 +76,7 @@ export default function TxsPage() {
       setLoading(false)
     }
     load()
-    const iv = setInterval(load, 10000)
+    const iv = setInterval(load, 15000)
     return () => clearInterval(iv)
   }, [])
 
@@ -193,11 +193,11 @@ export default function TxsPage() {
 
       {/* Pagination */}
       {!loading && totalPages > 1 && (
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="text-xs text-qtx-dim">
             Page {page} of {totalPages.toLocaleString()}
           </div>
-          <div className="flex gap-1">
+          <div className="flex flex-wrap gap-1">
             <button
               onClick={() => setPage(1)}
               disabled={page === 1}
