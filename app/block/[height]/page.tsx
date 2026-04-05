@@ -94,7 +94,7 @@ export default function BlockPage() {
       </div>
 
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-xl font-bold text-white">Block <span className="text-qtx-cyan font-mono">#{h.height}</span></h1>
         <div className="flex gap-2">
           {heightNum > 0 && (

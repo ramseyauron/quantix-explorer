@@ -123,7 +123,7 @@ export default function TxPage() {
         <span className="font-mono text-qtx-muted">{shortHash(txHash, 12, 8)}</span>
       </div>
 
-      <h1 className="text-xl font-bold text-white">Transaction Details</h1>
+      <h1 className="text-xl font-bold text-white break-all">Transaction Details</h1>
 
       <div className="qtx-card">
         <Row label="Transaction Hash">

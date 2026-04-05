@@ -298,7 +298,7 @@ export default function HomePage() {
                     {/* Tx info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-baseline gap-2">
-                        <Link href={`/tx/${encodeURIComponent(tx.id)}`} className="text-qtx-cyan font-mono text-xs hover:text-qtx-cyan-light truncate max-w-[140px]">
+                        <Link href={`/tx/${encodeURIComponent(tx.id)}`} className="text-qtx-cyan font-mono text-xs hover:text-qtx-cyan-light truncate max-w-[120px] sm:max-w-[200px]">
                           {shortHash(tx.id, 10, 6)}
                         </Link>
                         <span className="badge badge-method shrink-0">Transfer</span>
@@ -313,7 +313,7 @@ export default function HomePage() {
                     </div>
                     {/* From/To + Amount */}
                     <div className="text-right shrink-0">
-                      <div className="text-xs text-qtx-dim">
+                      <div className="hidden sm:block text-xs text-qtx-dim">
                         <span className="font-mono">{shortHash(tx.sender, 6, 4)}</span>
                         {' → '}
                         <span className="font-mono">{shortHash(tx.receiver, 6, 4)}</span>

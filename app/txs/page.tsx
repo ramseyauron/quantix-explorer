@@ -193,11 +193,11 @@ export default function TxsPage() {
 
       {/* Pagination */}
       {!loading && totalPages > 1 && (
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="text-xs text-qtx-dim">
             Page {page} of {totalPages.toLocaleString()}
           </div>
-          <div className="flex gap-1">
+          <div className="flex flex-wrap gap-1 justify-end">
             <button
               onClick={() => setPage(1)}
               disabled={page === 1}
