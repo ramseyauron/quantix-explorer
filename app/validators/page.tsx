@@ -114,7 +114,7 @@ export default function ValidatorsPage() {
                 <th>Rank</th>
                 <th>Validator Address</th>
                 <th>Stake</th>
-                <th className="hidden sm:table-cell">Status</th>
+                <th>Status</th>
                 <th className="hidden md:table-cell">Blocks Produced</th>
                 <th className="hidden lg:table-cell">Reward Address</th>
               </tr>
@@ -158,7 +158,7 @@ export default function ValidatorsPage() {
                     <td>
                       <span className="font-mono text-xs text-qtx-green">{formatQTX(v.stake)}</span>
                     </td>
-                    <td className="hidden sm:table-cell">
+                    <td>
                       <span className={`badge ${isActive ? 'badge-success' : isPending ? 'badge-pending' : 'badge-failed'}`}>
                         {isActive ? '● Active' : isPending ? '○ Pending' : v.status}
                       </span>

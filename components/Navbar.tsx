@@ -48,7 +48,7 @@ export default function Navbar() {
 
       {/* Main navbar */}
       <nav className="sticky top-0 z-50 bg-qtx-bg/95 backdrop-blur border-b border-qtx-border">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 h-14 flex items-center gap-3 sm:gap-6">
+        <div className="max-w-7xl mx-auto px-4 h-14 flex items-center gap-6">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 shrink-0">
             <svg width="26" height="26" viewBox="0 0 32 32" fill="none">
@@ -94,7 +94,7 @@ export default function Navbar() {
           </div>
 
           {/* Search */}
-          <form onSubmit={handleSearch} className="flex-1 min-w-0 ml-auto sm:max-w-md">
+          <form onSubmit={handleSearch} className="flex-1 max-w-md ml-auto">
             <div className="relative">
               <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-qtx-dim" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
