@@ -58,7 +58,7 @@ function formatQTX(a: string | number) {
 }
 
 function timeAgo(ts: number) {
-  if (!ts || ts < 1_000_000) return '—'
+  if (!ts) return '—'
   const s = Math.floor(Date.now() / 1000) - ts
   if (s < 5) return 'just now'
   if (s < 60) return `${s}s ago`

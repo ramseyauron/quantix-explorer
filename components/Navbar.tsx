@@ -35,7 +35,7 @@ export default function Navbar() {
     <>
       {/* Top stats bar */}
       <div className="stats-bar hidden sm:block">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-6 text-xs">
+        <div className="max-w-7xl mx-auto px-4 flex items-center gap-6 text-xs">
           <span className="flex items-center gap-1.5">
             <span className="live-dot" />
             <span className="text-qtx-green font-medium">Devnet</span>
@@ -48,7 +48,7 @@ export default function Navbar() {
 
       {/* Main navbar */}
       <nav className="sticky top-0 z-50 bg-qtx-bg/95 backdrop-blur border-b border-qtx-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center gap-3 sm:gap-6">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 h-14 flex items-center gap-3 sm:gap-6">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 shrink-0">
             <svg width="26" height="26" viewBox="0 0 32 32" fill="none">

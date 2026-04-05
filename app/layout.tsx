@@ -25,7 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="bg-qtx-bg text-qtx-text min-h-screen antialiased" style={{ fontFamily: 'var(--font-inter), Inter, system-ui, sans-serif' }}>
         <Navbar />
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">{children}</main>
+        <main className="max-w-7xl mx-auto px-3 sm:px-4 py-6">{children}</main>
         <footer className="border-t border-qtx-border mt-12 py-8">
           <div className="max-w-7xl mx-auto px-4">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-qtx-dim">
@@ -40,7 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 Quantix Devnet · Chain ID 73310 · Post-Quantum Layer 1 · SPHINCS+ Signatures
               </div>
               <div className="text-qtx-dim">
-                © 2026 Quantix Network
+                © 2025 Quantix Network
               </div>
             </div>
           </div>

@@ -276,18 +276,4 @@ body {
   .stat-card .text-xl {
     font-size: 1.1rem;
   }
-  /* Fix card inner spacing on mobile */
-  .qtx-card > div:first-child {
-    padding-left: 12px;
-    padding-right: 12px;
-  }
-  /* Reduce detail-row padding on mobile */
-  .detail-row {
-    padding: 10px 12px;
-  }
-  /* Tab buttons more compact */
-  .tab-btn {
-    padding: 8px 12px;
-    font-size: 12px;
-  }
 }

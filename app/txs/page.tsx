@@ -40,7 +40,7 @@ function formatFee(gasLimit: string | number, gasPrice?: string | number) {
 }
 
 function timeAgo(ts: number) {
-  if (!ts || ts < 1_000_000) return '—'
+  if (!ts) return '—'
   const s = Math.floor(Date.now() / 1000) - ts
   if (s < 60) return `${s}s ago`
   if (s < 3600) return `${Math.floor(s / 60)}m ago`
