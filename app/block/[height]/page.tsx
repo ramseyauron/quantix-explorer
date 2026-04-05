@@ -20,6 +20,7 @@ function formatQTX(a: string | number) {
 }
 
 function timeAgo(ts: number) {
+  if (!ts || ts < 1_000_000) return '—'
   const s = Math.floor(Date.now() / 1000) - ts
   if (s < 60) return `${s} secs ago`
   if (s < 3600) return `${Math.floor(s / 60)} mins ago`
@@ -28,6 +29,7 @@ function timeAgo(ts: number) {
 }
 
 function formatTimestamp(ts: number) {
+  if (!ts || ts < 1_000_000) return '—'
   return new Date(ts * 1000).toUTCString()
 }
 
