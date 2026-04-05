@@ -1,19 +1,12 @@
 import type { Metadata } from 'next'
-import { Orbitron, Exo_2 } from 'next/font/google'
+import { Inter } from 'next/font/google'
 import './globals.css'
 import Navbar from '@/components/Navbar'
 
-const orbitron = Orbitron({
-  subsets: ['latin'],
-  weight: ['400', '600', '700', '800', '900'],
-  variable: '--font-orbitron',
-  display: 'swap',
-})
-
-const exo2 = Exo_2({
+const inter = Inter({
   subsets: ['latin'],
   weight: ['300', '400', '500', '600', '700'],
-  variable: '--font-exo2',
+  variable: '--font-inter',
   display: 'swap',
 })
 
@@ -24,13 +17,33 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${orbitron.variable} ${exo2.variable}`}>
-      <body className="bg-qtx-bg text-qtx-text min-h-screen font-body antialiased">
+    <html lang="en" className={inter.variable}>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+      </head>
+      <body className="bg-qtx-bg text-qtx-text min-h-screen antialiased" style={{ fontFamily: 'var(--font-inter), Inter, system-ui, sans-serif' }}>
         <Navbar />
         <main className="max-w-7xl mx-auto px-4 py-6">{children}</main>
-        <footer className="border-t border-qtx-border mt-16 py-6 text-center text-slate-600 text-sm font-body">
-          <span className="text-qtx-cyan font-mono font-bold tracking-widest" style={{ fontFamily: 'var(--font-orbitron)', textShadow: '0 0 10px rgba(0,255,255,0.4)' }}>QUANTIX</span>
-          <span className="text-slate-600"> Explorer · Post-Quantum Blockchain · Chain ID 73310</span>
+        <footer className="border-t border-qtx-border mt-12 py-8">
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-qtx-dim">
+              <div className="flex items-center gap-2">
+                <svg width="18" height="18" viewBox="0 0 32 32" fill="none">
+                  <polygon points="16,2 30,26 2,26" stroke="#06b6d4" strokeWidth="2" fill="none"/>
+                  <circle cx="16" cy="17" r="3" fill="#06b6d4"/>
+                </svg>
+                <span className="font-semibold text-qtx-muted">Quantix Explorer</span>
+              </div>
+              <div className="text-center text-qtx-dim">
+                Quantix Devnet · Chain ID 73310 · Post-Quantum Layer 1 · SPHINCS+ Signatures
+              </div>
+              <div className="text-qtx-dim">
+                © 2025 Quantix Network
+              </div>
+            </div>
+          </div>
         </footer>
       </body>
     </html>

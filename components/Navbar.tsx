@@ -1,60 +1,115 @@
 'use client'
 import Link from 'next/link'
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 
 export default function Navbar() {
   const [query, setQuery] = useState('')
   const router = useRouter()
+  const pathname = usePathname()
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     const q = query.trim()
     if (!q) return
+    // Smart routing: numeric = block, 64-char hex = address, anything long = tx
     if (/^\d+$/.test(q)) {
       router.push(`/block/${q}`)
-    } else if (q.startsWith('0x') || q.includes('_') || q.toLowerCase().includes('genesis')) {
-      router.push(`/address/${encodeURIComponent(q)}`)
+    } else if (/^[0-9a-fA-F]{64}$/.test(q)) {
+      router.push(`/address/${q}`)
     } else if (q.length > 20) {
       router.push(`/tx/${encodeURIComponent(q)}`)
+    } else {
+      router.push(`/block/${q}`)
     }
     setQuery('')
   }
 
+  const navLinks = [
+    { href: '/', label: 'Home' },
+    { href: '/txs', label: 'Transactions' },
+    { href: '/validators', label: 'Validators' },
+  ]
+
   return (
-    <nav className="sticky top-0 z-50 border-b border-qtx-border bg-qtx-bg/90 backdrop-blur-md">
-      <div className="max-w-7xl mx-auto px-4 h-14 flex items-center gap-4">
-        <Link href="/" className="flex items-center gap-2 shrink-0">
-          <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
-            <polygon points="16,2 30,26 2,26" stroke="#00FFFF" strokeWidth="2" fill="none"/>
-            <polygon points="16,8 25,24 7,24" fill="rgba(0,255,255,0.15)" stroke="#7B61FF" strokeWidth="1"/>
-            <circle cx="16" cy="16" r="3" fill="#00FFFF"/>
-          </svg>
-          <span className="font-bold text-qtx-text tracking-widest font-heading" style={{ textShadow: '0 0 10px rgba(0,255,255,0.3)' }}>QUANTIX</span>
-          <span className="text-xs text-slate-500 hidden sm:block font-body">Explorer</span>
-        </Link>
-
-        <form onSubmit={handleSearch} className="flex-1 max-w-xl">
-          <input
-            type="text"
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-            placeholder="Search by block height, tx hash, address..."
-            className="w-full bg-qtx-surface border border-qtx-border rounded-lg px-4 py-1.5 text-sm text-qtx-text placeholder-slate-600 focus:outline-none focus:border-qtx-cyan transition-colors font-body"
-            style={{ transition: 'border-color 0.2s, box-shadow 0.2s' }}
-            onFocus={e => { e.currentTarget.style.boxShadow = '0 0 0 1px rgba(0,255,255,0.3), 0 0 15px rgba(0,255,255,0.1)' }}
-            onBlur={e => { e.currentTarget.style.boxShadow = 'none' }}
-          />
-        </form>
-
-        <div className="hidden md:flex items-center gap-4 text-sm text-slate-500 font-body">
-          <Link href="/" className="hover:text-qtx-cyan transition-colors">Blocks</Link>
-          <Link href="/txs" className="hover:text-qtx-cyan transition-colors">Txns</Link>
-          <Link href="/validators" className="hover:text-qtx-purple transition-colors">Validators</Link>
-          <a href="https://github.com/ramseyauron/quantix" target="_blank" rel="noopener noreferrer"
-             className="hover:text-qtx-cyan transition-colors">GitHub</a>
+    <>
+      {/* Top stats bar */}
+      <div className="stats-bar hidden sm:block">
+        <div className="max-w-7xl mx-auto px-4 flex items-center gap-6 text-xs">
+          <span className="flex items-center gap-1.5">
+            <span className="live-dot" />
+            <span className="text-qtx-green font-medium">Devnet</span>
+          </span>
+          <span className="text-qtx-dim">Chain ID: <span className="text-qtx-muted">73310</span></span>
+          <span className="text-qtx-dim">Consensus: <span className="text-qtx-muted">PBFT+PoS</span></span>
+          <span className="text-qtx-dim">Signatures: <span className="text-qtx-muted">SPHINCS+</span></span>
         </div>
       </div>
-    </nav>
+
+      {/* Main navbar */}
+      <nav className="sticky top-0 z-50 bg-qtx-bg/95 backdrop-blur border-b border-qtx-border">
+        <div className="max-w-7xl mx-auto px-4 h-14 flex items-center gap-6">
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2.5 shrink-0">
+            <svg width="26" height="26" viewBox="0 0 32 32" fill="none">
+              <polygon points="16,2 30,26 2,26" stroke="#06b6d4" strokeWidth="2" fill="none"/>
+              <polygon points="16,8 25,24 7,24" fill="rgba(6,182,212,0.12)" stroke="#7c3aed" strokeWidth="1.5"/>
+              <circle cx="16" cy="17" r="2.5" fill="#06b6d4"/>
+            </svg>
+            <div className="flex items-baseline gap-1.5">
+              <span className="font-bold text-white text-base tracking-tight">Quantix</span>
+              <span className="text-xs text-qtx-dim font-normal hidden sm:block">Explorer</span>
+            </div>
+          </Link>
+
+          {/* Nav links */}
+          <div className="hidden md:flex items-center gap-5">
+            {navLinks.map(({ href, label }) => (
+              <Link
+                key={href}
+                href={href}
+                className={`nav-link text-sm font-medium transition-colors ${
+                  pathname === href ? 'text-qtx-text' : 'text-qtx-dim hover:text-qtx-muted'
+                }`}
+              >
+                {label}
+              </Link>
+            ))}
+            {/* Tokens (coming soon) */}
+            <span
+              className="text-sm font-medium text-qtx-dim/50 cursor-not-allowed relative group"
+              title="Coming Soon"
+            >
+              Tokens
+              <span className="absolute -top-7 left-1/2 -translate-x-1/2 bg-qtx-surface2 text-qtx-muted text-xs px-2 py-1 rounded border border-qtx-border2 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                Coming Soon
+              </span>
+            </span>
+          </div>
+
+          {/* Network badge */}
+          <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded bg-qtx-surface border border-qtx-border2 text-xs">
+            <span className="live-dot" style={{width:'5px',height:'5px'}} />
+            <span className="text-qtx-muted font-medium">Devnet · Chain 73310</span>
+          </div>
+
+          {/* Search */}
+          <form onSubmit={handleSearch} className="flex-1 max-w-md ml-auto">
+            <div className="relative">
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-qtx-dim" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+              </svg>
+              <input
+                type="text"
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                placeholder="Search by block / tx hash / address"
+                className="w-full bg-qtx-surface border border-qtx-border2 rounded-md pl-9 pr-4 py-2 text-sm text-qtx-text placeholder-qtx-dim focus:outline-none focus:border-qtx-cyan focus:ring-1 focus:ring-qtx-cyan/30 transition-all"
+              />
+            </div>
+          </form>
+        </div>
+      </nav>
+    </>
   )
 }

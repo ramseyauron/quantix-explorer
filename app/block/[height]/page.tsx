@@ -3,11 +3,41 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 
+function shortHash(h: string, front = 10, back = 8) {
+  if (!h) return '—'
+  if (h.startsWith('GENESIS_')) return h.slice(0, 18) + '…'
+  if (h.length <= front + back + 3) return h
+  return h.slice(0, front) + '…' + h.slice(-back)
+}
+
+function formatQTX(a: string | number) {
+  try {
+    const n = BigInt(a.toString())
+    if (n === 0n) return '0 QTX'
+    const qtx = Number(n) / 1e18
+    return qtx.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 6 }) + ' QTX'
+  } catch { return `${a}` }
+}
+
 function timeAgo(ts: number) {
   const s = Math.floor(Date.now() / 1000) - ts
-  if (s < 60) return `${s}s ago`
-  if (s < 3600) return `${Math.floor(s / 60)}m ago`
+  if (s < 60) return `${s} secs ago`
+  if (s < 3600) return `${Math.floor(s / 60)} mins ago`
+  if (s < 86400) return `${Math.floor(s / 3600)} hrs ago`
   return new Date(ts * 1000).toLocaleString()
+}
+
+function formatTimestamp(ts: number) {
+  return new Date(ts * 1000).toUTCString()
+}
+
+function Row({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="detail-row">
+      <div className="detail-label">{label}</div>
+      <div className="detail-value">{children}</div>
+    </div>
+  )
 }
 
 export default function BlockPage() {
@@ -15,6 +45,7 @@ export default function BlockPage() {
   const [block, setBlock] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
+  const [activeTab, setActiveTab] = useState<'overview' | 'txs'>('overview')
 
   useEffect(() => {
     fetch(`/api/node/block/${height}`, { cache: 'no-store' })
@@ -26,153 +57,199 @@ export default function BlockPage() {
 
   if (loading) return (
     <div className="space-y-3 animate-pulse">
-      {[...Array(8)].map((_, i) => <div key={i} className="h-10 bg-qtx-surface rounded-lg" />)}
+      <div className="h-8 bg-qtx-surface rounded w-64" />
+      <div className="qtx-card">
+        {[...Array(10)].map((_, i) => (
+          <div key={i} className="detail-row">
+            <div className="h-4 bg-qtx-surface2 rounded w-32" />
+            <div className="h-4 bg-qtx-surface2 rounded w-64" />
+          </div>
+        ))}
+      </div>
     </div>
   )
 
   if (error || !block) return (
-    <div className="text-center py-16">
+    <div className="text-center py-20">
       <div className="text-5xl mb-4">🔍</div>
       <h2 className="text-xl font-bold text-white mb-2">Block Not Found</h2>
-      <p className="text-slate-500 mb-6">Block #{height} does not exist or node is offline.</p>
-      <Link href="/" className="text-qtx-cyan hover:underline">← Back to Explorer</Link>
+      <p className="text-qtx-muted mb-6 text-sm">Block #{height} does not exist or node is offline.</p>
+      <Link href="/" className="text-qtx-cyan hover:underline text-sm">← Back to Explorer</Link>
     </div>
   )
 
   const h = block.header
-  const txs = block.body?.txs_list || []
-
-  const fields = [
-    { label: 'Block Height', value: `#${h.height}`, color: 'text-qtx-cyan', mono: true },
-    { label: 'Status', value: '✅ Confirmed', color: 'text-qtx-green' },
-    { label: 'Timestamp', value: `${new Date(h.timestamp * 1000).toLocaleString()} (${timeAgo(h.timestamp)})` },
-    { label: 'Transactions', value: `${txs.length}` },
-    { label: 'Version', value: String(h.version) },
-    { label: 'Nonce', value: h.nonce, mono: true },
-    { label: 'Gas Limit', value: h.gas_limit, mono: true },
-    { label: 'Gas Used', value: h.gas_used, mono: true },
-    { label: 'Block Hash', value: h.hash, mono: true, break: true },
-    { label: 'Parent Hash', value: h.parent_hash, mono: true, break: true },
-    { label: 'Txs Root', value: h.txs_root, mono: true, break: true },
-    { label: 'State Root', value: h.state_root, mono: true, break: true },
-    { label: 'Uncles Hash', value: h.uncles_hash, mono: true, break: true },
-    { label: 'Extra Data', value: h.extra_data || '—' },
-    { label: 'Proposer', value: h.proposer_id || h.miner || '—', mono: true, break: true },
-    { label: 'Difficulty', value: h.difficulty, mono: true },
-  ]
-
-  function shortHash(s: string, n = 16) {
-    if (!s) return '—'
-    if (s.startsWith('GENESIS_')) return s.slice(0, 20) + '…'
-    return s.slice(0, n) + '…' + s.slice(-8)
-  }
-
-  function formatQTX(a: string | number) {
-    try {
-      const n = BigInt(a.toString())
-      if (n === 0n) return '0 QTX'
-      const qtx = Number(n) / 1e18
-      return qtx.toLocaleString('en-US', { maximumFractionDigits: 4 }) + ' QTX'
-    } catch { return `${a}` }
-  }
-
+  const txs: any[] = block.body?.txs_list || []
   const heightNum = parseInt(height)
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-2 text-sm text-slate-500">
+    <div className="space-y-5">
+      {/* Breadcrumb */}
+      <div className="flex items-center gap-2 text-xs text-qtx-dim">
         <Link href="/" className="hover:text-qtx-cyan">Home</Link>
         <span>›</span>
-        <span className="text-slate-300">Block #{h.height}</span>
+        <Link href="/" className="hover:text-qtx-cyan">Blocks</Link>
+        <span>›</span>
+        <span className="text-qtx-muted">Block #{h.height}</span>
       </div>
 
-      <div className="rounded-xl border border-qtx-border bg-qtx-surface overflow-hidden">
-        <div className="px-6 py-4 border-b border-qtx-border flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-qtx-cyan/10 border border-qtx-cyan/20 flex items-center justify-center">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00d4ff" strokeWidth="2">
-                <rect x="3" y="3" width="18" height="18" rx="3"/>
-                <path d="M3 9h18M9 21V9"/>
-              </svg>
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-white">Block #{h.height}</h1>
-              <p className="text-xs text-slate-500">{timeAgo(h.timestamp)}</p>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            {heightNum > 0 && (
-              <Link href={`/block/${heightNum - 1}`}
-                className="px-3 py-1.5 text-xs border border-qtx-border rounded-lg text-slate-400 hover:border-qtx-cyan hover:text-qtx-cyan transition-colors">
-                ← Prev
-              </Link>
-            )}
-            <Link href={`/block/${heightNum + 1}`}
-              className="px-3 py-1.5 text-xs border border-qtx-border rounded-lg text-slate-400 hover:border-qtx-cyan hover:text-qtx-cyan transition-colors">
-              Next →
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-bold text-white">Block <span className="text-qtx-cyan font-mono">#{h.height}</span></h1>
+        <div className="flex gap-2">
+          {heightNum > 0 && (
+            <Link href={`/block/${heightNum - 1}`}
+              className="px-3 py-1.5 text-xs border border-qtx-border2 rounded bg-qtx-surface text-qtx-muted hover:border-qtx-cyan hover:text-qtx-cyan transition-colors">
+              ← Prev
             </Link>
-          </div>
-        </div>
-
-        <div className="divide-y divide-qtx-border/40">
-          {fields.map(({ label, value, mono, color, break: br }) => (
-            <div key={label} className="px-6 py-3 flex flex-col sm:flex-row gap-1">
-              <div className="sm:w-44 text-sm text-slate-500 shrink-0">{label}</div>
-              <div className={`text-sm ${mono ? 'font-mono' : ''} ${color || 'text-slate-200'} ${br ? 'break-all' : ''}`}>
-                {value || '—'}
-              </div>
-            </div>
-          ))}
+          )}
+          <Link href={`/block/${heightNum + 1}`}
+            className="px-3 py-1.5 text-xs border border-qtx-border2 rounded bg-qtx-surface text-qtx-muted hover:border-qtx-cyan hover:text-qtx-cyan transition-colors">
+            Next →
+          </Link>
         </div>
       </div>
 
-      {/* Transactions */}
-      <div>
-        <h2 className="text-lg font-semibold text-white mb-3">
-          Transactions
-          <span className="ml-2 px-2 py-0.5 rounded text-xs font-mono bg-qtx-cyan/10 text-qtx-cyan border border-qtx-cyan/20">{txs.length}</span>
-        </h2>
-        {txs.length === 0 ? (
-          <div className="rounded-xl border border-qtx-border bg-qtx-surface p-8 text-center text-slate-600">No transactions in this block</div>
-        ) : (
-          <div className="rounded-xl border border-qtx-border overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-qtx-surface border-b border-qtx-border">
-                  <th className="px-4 py-3 text-left text-slate-500 font-medium">Tx Hash</th>
-                  <th className="px-4 py-3 text-left text-slate-500 font-medium hidden md:table-cell">From</th>
-                  <th className="px-4 py-3 text-left text-slate-500 font-medium hidden md:table-cell">To</th>
-                  <th className="px-4 py-3 text-left text-slate-500 font-medium">Amount</th>
-                  <th className="px-4 py-3 text-left text-slate-500 font-medium hidden lg:table-cell">Nonce</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-qtx-border/40">
-                {txs.map((tx: any, i: number) => (
-                  <tr key={`${tx.id}-${i}`} className="hover:bg-qtx-surface/50 transition-colors">
-                    <td className="px-4 py-3">
-                      <Link href={`/tx/${encodeURIComponent(tx.id)}`} className="font-mono text-xs text-qtx-cyan hover:underline">
-                        {shortHash(tx.id)}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3 hidden md:table-cell">
-                      <span className="font-mono text-xs text-slate-400">{shortHash(tx.sender, 12)}</span>
-                    </td>
-                    <td className="px-4 py-3 hidden md:table-cell">
-                      <span className="font-mono text-xs text-slate-400">{shortHash(tx.receiver, 12)}</span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="font-mono text-xs text-qtx-green">{formatQTX(tx.amount)}</span>
-                    </td>
-                    <td className="px-4 py-3 hidden lg:table-cell">
-                      <span className="font-mono text-xs text-slate-500">{tx.nonce}</span>
-                    </td>
+      {/* Tabs */}
+      <div className="border-b border-qtx-border flex gap-0">
+        <button
+          onClick={() => setActiveTab('overview')}
+          className={`tab-btn ${activeTab === 'overview' ? 'active' : ''}`}
+        >
+          Overview
+        </button>
+        <button
+          onClick={() => setActiveTab('txs')}
+          className={`tab-btn ${activeTab === 'txs' ? 'active' : ''}`}
+        >
+          Transactions{' '}
+          <span className={`ml-1.5 px-1.5 py-0.5 rounded text-xs font-mono ${txs.length > 0 ? 'bg-qtx-cyan/10 text-qtx-cyan' : 'bg-qtx-surface2 text-qtx-dim'}`}>
+            {txs.length}
+          </span>
+        </button>
+      </div>
+
+      {activeTab === 'overview' && (
+        <div className="qtx-card">
+          <Row label="Block Height">
+            <span className="font-mono text-qtx-cyan">#{h.height}</span>
+          </Row>
+          <Row label="Status">
+            <span className="badge badge-success">
+              ✓ Finalized
+            </span>
+          </Row>
+          <Row label="Timestamp">
+            <span>{formatTimestamp(h.timestamp)}</span>
+            <span className="text-qtx-dim ml-2 text-xs">({timeAgo(h.timestamp)})</span>
+          </Row>
+          <Row label="Transactions">
+            <Link href="#" onClick={() => setActiveTab('txs')} className="text-qtx-cyan hover:underline">
+              {txs.length} transaction{txs.length !== 1 ? 's' : ''} in this block
+            </Link>
+          </Row>
+          <Row label="Proposed By">
+            {h.proposer_id ? (
+              <Link href={`/address/${h.proposer_id}`} className="font-mono text-qtx-cyan hover:underline text-sm break-all">
+                {shortHash(h.proposer_id, 10, 8)}
+              </Link>
+            ) : (
+              <span className="text-qtx-dim">—</span>
+            )}
+          </Row>
+          <Row label="Block Reward">
+            <span className="text-qtx-green font-mono">5 QTX</span>
+          </Row>
+          <Row label="Gas Used">
+            <span className="font-mono">{h.gas_used !== undefined ? Number(h.gas_used).toLocaleString() : '—'}</span>
+            {h.gas_limit && h.gas_used !== undefined && (
+              <span className="text-qtx-dim text-xs ml-2">
+                ({Math.round((Number(h.gas_used) / Number(h.gas_limit)) * 100)}%)
+              </span>
+            )}
+          </Row>
+          <Row label="Gas Limit">
+            <span className="font-mono">{h.gas_limit !== undefined ? Number(h.gas_limit).toLocaleString() : '—'}</span>
+          </Row>
+          <Row label="Block Hash">
+            <span className="font-mono text-sm break-all text-qtx-muted">{h.hash || '—'}</span>
+          </Row>
+          <Row label="Parent Hash">
+            {h.parent_hash ? (
+              <Link href={`/block/${heightNum - 1}`} className="font-mono text-sm text-qtx-cyan hover:underline break-all">
+                {h.parent_hash}
+              </Link>
+            ) : (
+              <span className="text-qtx-dim">—</span>
+            )}
+          </Row>
+          <Row label="State Root">
+            <span className="font-mono text-sm break-all text-qtx-muted">{h.state_root || '—'}</span>
+          </Row>
+          <Row label="Transactions Root">
+            <span className="font-mono text-sm break-all text-qtx-muted">{h.txs_root || '—'}</span>
+          </Row>
+          <Row label="Nonce">
+            <span className="font-mono text-qtx-muted">{h.nonce || '—'}</span>
+          </Row>
+          <Row label="Difficulty">
+            <span className="font-mono text-qtx-muted">{h.difficulty || '—'}</span>
+          </Row>
+        </div>
+      )}
+
+      {activeTab === 'txs' && (
+        <div className="qtx-card overflow-hidden">
+          {txs.length === 0 ? (
+            <div className="p-12 text-center text-qtx-dim text-sm">No transactions in this block</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="qtx-table">
+                <thead>
+                  <tr>
+                    <th>Tx Hash</th>
+                    <th className="hidden sm:table-cell">From</th>
+                    <th className="hidden sm:table-cell">To</th>
+                    <th>Value</th>
+                    <th className="hidden lg:table-cell">Gas Limit</th>
+                    <th>Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+                </thead>
+                <tbody>
+                  {txs.map((tx: any, i: number) => (
+                    <tr key={`${tx.id}-${i}`}>
+                      <td>
+                        <Link href={`/tx/${encodeURIComponent(tx.id)}`} className="font-mono text-xs text-qtx-cyan hover:underline">
+                          {shortHash(tx.id, 10, 6)}
+                        </Link>
+                      </td>
+                      <td className="hidden sm:table-cell">
+                        <Link href={`/address/${tx.sender}`} className="font-mono text-xs text-qtx-muted hover:text-qtx-cyan">
+                          {shortHash(tx.sender, 8, 6)}
+                        </Link>
+                      </td>
+                      <td className="hidden sm:table-cell">
+                        <Link href={`/address/${tx.receiver}`} className="font-mono text-xs text-qtx-muted hover:text-qtx-cyan">
+                          {shortHash(tx.receiver, 8, 6)}
+                        </Link>
+                      </td>
+                      <td>
+                        <span className="font-mono text-xs text-qtx-green">{formatQTX(tx.amount)}</span>
+                      </td>
+                      <td className="hidden lg:table-cell">
+                        <span className="font-mono text-xs text-qtx-dim">{tx.gas_limit?.toLocaleString() || '—'}</span>
+                      </td>
+                      <td>
+                        <span className="badge badge-success">Success</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
