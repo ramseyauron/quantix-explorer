@@ -133,12 +133,12 @@ export default function HomePage() {
   }
 
   return (
-    <div className="-mx-4 -mt-6">
+    <div className="-mx-4 sm:-mx-6 lg:-mx-8 -mt-4 sm:-mt-6">
       {/* Hero / Search section */}
-      <div className="search-hero px-4">
+      <div className="search-hero px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-white mb-1">
+          <div className="mb-5">
+            <h1 className="text-xl sm:text-2xl font-bold text-white mb-1">
               Quantix Blockchain Explorer
             </h1>
             <p className="hidden sm:block text-qtx-dim text-sm">
@@ -150,17 +150,17 @@ export default function HomePage() {
               type="text"
               value={query}
               onChange={e => setQuery(e.target.value)}
-              placeholder="Search by Block Height, Transaction Hash, or Address"
-              className="flex-1 bg-white/5 border border-qtx-border2 border-r-0 rounded-l-lg px-5 py-3 text-sm text-qtx-text placeholder-qtx-dim focus:outline-none focus:border-qtx-cyan focus:ring-1 focus:ring-qtx-cyan/30 transition-all"
+              placeholder="Search by Block Height, Tx Hash, or Address"
+              className="flex-1 bg-white/5 border border-qtx-border2 border-r-0 rounded-l-lg px-4 sm:px-5 py-3 text-base sm:text-sm text-qtx-text placeholder-qtx-dim focus:outline-none focus:border-qtx-cyan focus:ring-1 focus:ring-qtx-cyan/30 transition-all min-w-0"
             />
             <button
               type="submit"
-              className="px-6 py-3 bg-qtx-cyan text-black text-sm font-semibold rounded-r-lg hover:bg-qtx-cyan-light transition-colors shrink-0"
+              className="px-4 sm:px-6 py-3 bg-qtx-cyan text-black text-sm font-semibold rounded-r-lg hover:bg-qtx-cyan-light transition-colors shrink-0"
             >
               Search
             </button>
           </form>
-          <p className="text-xs text-qtx-dim mt-2">
+          <p className="text-xs text-qtx-dim mt-2 hidden sm:block">
             Supported: Block Height (number), Tx Hash (long string), Address (64-char hex)
           </p>
         </div>
@@ -168,7 +168,7 @@ export default function HomePage() {
 
       {/* Stats bar */}
       <div className="bg-qtx-surface border-b border-qtx-border">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0 divide-qtx-border">
             <StatCard
               label="Block Height"
@@ -195,7 +195,7 @@ export default function HomePage() {
       </div>
 
       {/* Main content */}
-      <div className="max-w-7xl mx-auto px-4 pt-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
         {loading ? (
           <div className="grid lg:grid-cols-2 gap-6">
             {[0, 1].map(i => (
