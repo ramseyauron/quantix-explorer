@@ -71,7 +71,7 @@ function StatCard({ label, value, sub }: { label: string; value: string; sub?: s
   return (
     <div className="px-5 py-4 border-r border-qtx-border last:border-r-0 flex flex-col gap-1">
       <div className="text-xs text-qtx-dim uppercase tracking-wide font-medium">{label}</div>
-      <div className="text-lg font-bold text-qtx-text font-mono">{value}</div>
+      <div className="text-sm sm:text-lg font-bold text-qtx-text font-mono truncate">{value}</div>
       {sub && <div className="text-xs text-qtx-dim">{sub}</div>}
     </div>
   )
@@ -141,7 +141,7 @@ export default function HomePage() {
             <h1 className="text-2xl font-bold text-white mb-1">
               Quantix Blockchain Explorer
             </h1>
-            <p className="text-qtx-dim text-sm">
+            <p className="hidden sm:block text-qtx-dim text-sm">
               Post-quantum Layer 1 · SPHINCS+ · Devnet · Chain ID 73310
             </p>
           </div>

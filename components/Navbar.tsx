@@ -104,7 +104,7 @@ export default function Navbar() {
                 value={query}
                 onChange={e => setQuery(e.target.value)}
                 placeholder="Search by block / tx hash / address"
-                className="w-full bg-qtx-surface border border-qtx-border2 rounded-md pl-9 pr-4 py-2 text-sm text-qtx-text placeholder-qtx-dim focus:outline-none focus:border-qtx-cyan focus:ring-1 focus:ring-qtx-cyan/30 transition-all"
+                className="w-full bg-qtx-surface border border-qtx-border2 rounded-md pl-9 pr-4 py-2 text-base sm:text-sm text-qtx-text placeholder-qtx-dim focus:outline-none focus:border-qtx-cyan focus:ring-1 focus:ring-qtx-cyan/30 transition-all"
               />
             </div>
           </form>

@@ -2,13 +2,18 @@
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 
-interface Validator {
+interface ValidatorStat {
   address: string
-  stake: string | number
-  status: string
-  blocks_produced?: number
-  reward_address?: string
+  blocks_produced: number
+  balance: string
 }
+
+const KNOWN_VALIDATORS = [
+  '48f7a87739839bf99ff17f864de472a793e7d2558775c2c8dd41d4dd54d6c4fe',
+  'dab0078285efce34e6c48e39e386fe835fcc7e3df1248491b3aac669fea7620c',
+  '3bf59e360b14e776b5c1640d39325e8730fb32b375c0dfa4cbe5341cb0759d5c',
+  'a19a344ca82fd4d48a3b60ea39e445bbdafe47631d9b7ed5e18732a8bfe771e0',
+]
 
 function shortHash(h: string, front = 12, back = 8) {
   if (!h) return '—'
@@ -26,17 +31,53 @@ function formatQTX(a: string | number) {
 }
 
 export default function ValidatorsPage() {
-  const [validators, setValidators] = useState<Validator[]>([])
+  const [validators, setValidators] = useState<ValidatorStat[]>([])
   const [loading, setLoading] = useState(true)
   const [online, setOnline] = useState(false)
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
 
   const fetchValidators = useCallback(async () => {
     try {
-      const res = await fetch('/api/node/validators', { cache: 'no-store' })
-      if (!res.ok) { setOnline(false); setLoading(false); return }
-      const data = await res.json()
-      setValidators(data.validators || data || [])
+      // 1. Fetch all blocks
+      const blocksRes = await fetch('/api/node/blocks?limit=500', { cache: 'no-store' })
+      if (!blocksRes.ok) { setOnline(false); setLoading(false); return }
+      const blocksData = await blocksRes.json()
+      const blocks: Array<{ header: { proposer_id?: string; miner?: string } }> =
+        Array.isArray(blocksData) ? blocksData : (blocksData.blocks || [])
+
+      // 2. Count blocks per proposer
+      const countMap = new Map<string, number>()
+      for (const b of blocks) {
+        const pid = b?.header?.proposer_id
+        if (pid && pid.length > 10) {
+          countMap.set(pid, (countMap.get(pid) || 0) + 1)
+        }
+      }
+
+      // 3. Merge with known validators (add at count=0 if not seen)
+      for (const addr of KNOWN_VALIDATORS) {
+        if (!countMap.has(addr)) countMap.set(addr, 0)
+      }
+
+      // 4. Fetch balances in parallel
+      const entries = Array.from(countMap.entries())
+      const withBalances: ValidatorStat[] = await Promise.all(
+        entries.map(async ([address, blocks_produced]) => {
+          try {
+            const r = await fetch(`/api/node/address/${address}`, { cache: 'no-store' })
+            if (!r.ok) return { address, blocks_produced, balance: '0' }
+            const d = await r.json()
+            return { address, blocks_produced, balance: d.balance ?? d.Balance ?? '0' }
+          } catch {
+            return { address, blocks_produced, balance: '0' }
+          }
+        })
+      )
+
+      // 5. Sort by blocks_produced descending
+      withBalances.sort((a, b) => b.blocks_produced - a.blocks_produced)
+
+      setValidators(withBalances)
       setOnline(true)
       setLastUpdate(new Date())
     } catch {
@@ -48,16 +89,9 @@ export default function ValidatorsPage() {
 
   useEffect(() => {
     fetchValidators()
-    const interval = setInterval(fetchValidators, 15000)
+    const interval = setInterval(fetchValidators, 30000)
     return () => clearInterval(interval)
   }, [fetchValidators])
-
-  const activeCount = validators.filter(v =>
-    !v.status || v.status === 'active' || v.status === 'Active'
-  ).length
-  const pendingCount = validators.filter(v =>
-    v.status === 'pending' || v.status === 'Pending'
-  ).length
 
   return (
     <div className="space-y-5">
@@ -84,9 +118,9 @@ export default function ValidatorsPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { label: 'Total Registered', value: validators.length > 0 ? validators.length.toString() : '—', color: 'text-qtx-cyan' },
-          { label: 'Active', value: activeCount > 0 ? activeCount.toString() : (validators.length > 0 ? validators.length.toString() : '—'), color: 'text-qtx-green' },
-          { label: 'Pending', value: pendingCount.toString(), color: 'text-qtx-yellow' },
+          { label: 'Total Validators', value: validators.length > 0 ? validators.length.toString() : '—', color: 'text-qtx-cyan' },
+          { label: 'Active', value: validators.length > 0 ? validators.length.toString() : '—', color: 'text-qtx-green' },
+          { label: 'Total Blocks', value: validators.reduce((s, v) => s + v.blocks_produced, 0).toLocaleString() || '—', color: 'text-qtx-yellow' },
           { label: 'Max Active Set', value: '21', color: 'text-qtx-purple-light' },
         ].map(({ label, value, color }) => (
           <div key={label} className="stat-card">
@@ -111,75 +145,50 @@ export default function ValidatorsPage() {
           <table className="qtx-table">
             <thead>
               <tr>
-                <th>Rank</th>
+                <th>#</th>
                 <th>Validator Address</th>
-                <th>Stake</th>
-                <th className="hidden sm:table-cell">Status</th>
-                <th className="hidden md:table-cell">Blocks Produced</th>
-                <th className="hidden lg:table-cell">Reward Address</th>
+                <th>Blocks Proposed</th>
+                <th className="hidden sm:table-cell">Balance / Rewards</th>
+                <th className="hidden md:table-cell">Status</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                [...Array(5)].map((_, i) => (
+                [...Array(4)].map((_, i) => (
                   <tr key={i}>
-                    <td colSpan={6}>
+                    <td colSpan={5}>
                       <div className="h-4 bg-qtx-surface2 rounded animate-pulse" />
                     </td>
                   </tr>
                 ))
-              ) : !online ? (
-                <tr>
-                  <td colSpan={6} className="text-center py-16">
-                    <div className="text-qtx-dim text-sm mb-2">Validators endpoint unavailable</div>
-                    <code className="text-xs text-qtx-dim/60">GET /validators not yet live on node</code>
-                  </td>
-                </tr>
               ) : validators.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-12 text-qtx-dim text-sm">
-                    No validators registered yet
+                  <td colSpan={5} className="text-center py-12 text-qtx-dim text-sm">
+                    No validator data available
                   </td>
                 </tr>
-              ) : validators.map((v, i) => {
-                const isActive = !v.status || v.status === 'active' || v.status === 'Active'
-                const isPending = v.status === 'pending' || v.status === 'Pending'
-                return (
-                  <tr key={i}>
-                    <td>
-                      <span className="font-mono text-qtx-dim text-xs">{i + 1}</span>
-                    </td>
-                    <td>
-                      <Link href={`/address/${encodeURIComponent(v.address)}`}
-                        className="font-mono text-xs text-qtx-cyan hover:underline">
-                        {shortHash(v.address)}
-                      </Link>
-                    </td>
-                    <td>
-                      <span className="font-mono text-xs text-qtx-green">{formatQTX(v.stake)}</span>
-                    </td>
-                    <td className="hidden sm:table-cell">
-                      <span className={`badge ${isActive ? 'badge-success' : isPending ? 'badge-pending' : 'badge-failed'}`}>
-                        {isActive ? '● Active' : isPending ? '○ Pending' : v.status}
-                      </span>
-                    </td>
-                    <td className="hidden md:table-cell">
-                      <span className="font-mono text-xs text-qtx-dim">
-                        {v.blocks_produced !== undefined ? v.blocks_produced.toLocaleString() : '—'}
-                      </span>
-                    </td>
-                    <td className="hidden lg:table-cell">
-                      {v.reward_address ? (
-                        <Link href={`/address/${v.reward_address}`} className="font-mono text-xs text-qtx-muted hover:text-qtx-cyan">
-                          {shortHash(v.reward_address, 8, 6)}
-                        </Link>
-                      ) : (
-                        <span className="font-mono text-xs text-qtx-dim">Same</span>
-                      )}
-                    </td>
-                  </tr>
-                )
-              })}
+              ) : validators.map((v, i) => (
+                <tr key={v.address}>
+                  <td>
+                    <span className="font-mono text-qtx-dim text-xs">{i + 1}</span>
+                  </td>
+                  <td>
+                    <Link href={`/address/${encodeURIComponent(v.address)}`}
+                      className="font-mono text-xs text-qtx-cyan hover:underline">
+                      {shortHash(v.address)}
+                    </Link>
+                  </td>
+                  <td>
+                    <span className="font-mono text-xs text-qtx-text">{v.blocks_produced.toLocaleString()}</span>
+                  </td>
+                  <td className="hidden sm:table-cell">
+                    <span className="font-mono text-xs text-qtx-green">{formatQTX(v.balance)}</span>
+                  </td>
+                  <td className="hidden md:table-cell">
+                    <span className="badge badge-success">● Active</span>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
