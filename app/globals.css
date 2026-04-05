@@ -259,21 +259,3 @@ body {
 }
 
 .copy-btn:hover { border-color: var(--cyan); color: var(--cyan); }
-
-/* Mobile responsiveness */
-@media (max-width: 640px) {
-  .qtx-table th,
-  .qtx-table td {
-    padding: 8px 10px;
-    font-size: 0.7rem;
-  }
-  .search-hero {
-    padding: 20px 0 16px;
-  }
-  .stat-card {
-    padding: 12px;
-  }
-  .stat-card .text-xl {
-    font-size: 1.1rem;
-  }
-}
