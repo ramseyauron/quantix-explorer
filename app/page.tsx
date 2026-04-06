@@ -193,7 +193,7 @@ export default function HomePage() {
               Search
             </button>
           </form>
-          <p className="text-xs text-qtx-dim mt-2 hidden sm:block">
+          <p className="text-xs text-qtx-dim mt-2 hidden sm:block mx-4">
             Supported: Block Height (number), Tx Hash (long string), Address
             (64-char hex)
           </p>
