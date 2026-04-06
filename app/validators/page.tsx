@@ -11,10 +11,10 @@ interface ValidatorData {
 }
 
 const KNOWN_VALIDATORS: { address: string; name: string }[] = [
-  { address: '48f7a87739839bf99ff17f864de472a793e7d2558775c2c8dd41d4dd54d6c4fe', name: 'Node-0' },
-  { address: 'dab0078285efce34e6c48e39e386fe835fcc7e3df1248491b3aac669fea7620c', name: 'Node-1' },
-  { address: '3bf59e360b14e776b5c1640d39325e8730fb32b375c0dfa4cbe5341cb0759d5c', name: 'Node-2' },
-  { address: 'a19a344ca82fd4d48a3b60ea39e445bbdafe47631d9b7ed5e18732a8bfe771e0', name: 'Node-3' },
+  { address: '4c029d0f43639f9641e5769e29cace01d95f87d09c4fb6309593cfe6588887e9', name: 'Node-0' },
+  { address: 'b76970fde53bc4ba1c0fcae22056a926aa93bb0f8127d2e198a0ddca8146d9dc', name: 'Node-1' },
+  { address: 'd8a6fb221957f7118b180c58f1cdb1e865e4e9e91fe135dbb8b422480453a3ca', name: 'Node-2' },
+  { address: '30a65cefdcb4d5043ee6db6884e9671348fb1d1368a7502150b492d510b4edc2', name: 'Node-3' },
 ]
 
 function shortHash(h: string, front = 12, back = 8) {
