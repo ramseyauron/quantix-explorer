@@ -7,7 +7,7 @@ interface ValidatorData {
   name: string
   blocks_produced: number
   balance: string | number
-  uptime: number // relative percentage vs highest producer
+  uptime: number // participation score vs expected blocks
 }
 
 function shortHash(h: string, front = 12, back = 8) {
@@ -81,10 +81,19 @@ export default function ValidatorsPage() {
           })
         }
 
-        // Calculate relative uptime
-        const maxBlocks = Math.max(...validatorList.map(v => v.blocks_produced), 1)
+        // Calculate uptime based on proportion of total blocks produced
+        // Each validator theoretically should produce ~totalBlocks/N blocks
+        // Uptime = actual / expected * 100, capped at 100%
+        const totalBlocksProduced = validatorList.reduce((s, v) => s + v.blocks_produced, 0)
+        const n = validatorList.length || 1
+        const expectedPerValidator = Math.max(totalBlocksProduced / n, 1)
         for (const v of validatorList) {
-          v.uptime = Math.round((v.blocks_produced / maxBlocks) * 100)
+          if (v.blocks_produced === 0) {
+            // Node joined recently or hasn't been selected yet
+            v.uptime = 0
+          } else {
+            v.uptime = Math.min(100, Math.round((v.blocks_produced / expectedPerValidator) * 100))
+          }
         }
 
         // Sort by blocks produced desc
@@ -210,7 +219,7 @@ export default function ValidatorsPage() {
                 <th>Validator</th>
                 <th className="hidden sm:table-cell">Address</th>
                 <th>Blocks</th>
-                <th className="hidden sm:table-cell">Uptime</th>
+                <th className="hidden sm:table-cell">Participation</th>
                 <th className="hidden md:table-cell">Balance</th>
               </tr>
             </thead>
