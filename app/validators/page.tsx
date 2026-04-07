@@ -10,13 +10,6 @@ interface ValidatorData {
   uptime: number // relative percentage vs highest producer
 }
 
-const KNOWN_VALIDATORS: { address: string; name: string }[] = [
-  { address: 'd115e72be0e862923d5fe86898ccea50d15e4b78dc46fb1ee28ab398064ef064', name: 'Node-0' },
-  { address: '34238e54849b46bbf7da1d7c506864f7a600824b97c076325c9395b98f91d317', name: 'Node-1' },
-  { address: '61bbb1caf8ec527265e9718dfd3f6f2075b9be5db84dfc18023e252ab36d9ca3', name: 'Node-2' },
-  { address: '1973bb6005de5fa453bca0eae7a9827a577fae96a28fa7d5ead83bbc7b2eadc7', name: 'Node-3' },
-]
-
 function shortHash(h: string, front = 12, back = 8) {
   if (!h) return '—'
   if (h.length <= front + back + 3) return h
@@ -51,16 +44,65 @@ export default function ValidatorsPage() {
 
   const fetchValidators = useCallback(async () => {
     try {
+      // Primary: fetch from /validators API endpoint
+      const valRes = await fetch('/api/node/validators', { cache: 'no-store' })
+      if (valRes.ok) {
+        const valData = await valRes.json()
+        const rawVals: Array<{
+          address: string
+          node_id: string
+          stake: number
+          status: string
+          blocks_produced: number
+          reward_address: string
+        }> = valData.validators || []
+
+        // Fetch balances for each validator
+        const validatorList: ValidatorData[] = []
+        for (const v of rawVals) {
+          const address = v.reward_address || v.address
+          let balance: string | number = 0
+          try {
+            const res = await fetch(`/api/node/address/${address}`, { cache: 'no-store' })
+            if (res.ok) {
+              const data = await res.json()
+              balance = data.balance ?? 0
+            }
+          } catch { /* skip */ }
+
+          validatorList.push({
+            address,
+            name: v.node_id !== 'unknown' ? v.node_id : shortHash(address, 6, 4),
+            blocks_produced: v.blocks_produced,
+            balance,
+            uptime: 0, // calculated below
+          })
+        }
+
+        // Calculate relative uptime
+        const maxBlocks = Math.max(...validatorList.map(v => v.blocks_produced), 1)
+        for (const v of validatorList) {
+          v.uptime = Math.round((v.blocks_produced / maxBlocks) * 100)
+        }
+
+        // Sort by blocks produced desc
+        validatorList.sort((a, b) => b.blocks_produced - a.blocks_produced)
+        setValidators(validatorList)
+        setLastUpdate(new Date())
+        return
+      }
+    } catch { /* fall through to block scan */ }
+
+    // Fallback: scan blocks for proposers
+    try {
       const countRes = await fetch('/api/node/blockcount', { cache: 'no-store' })
       const { count } = await countRes.json()
 
-      // Fetch all blocks to scan proposers
       const blockPromises = Array.from({ length: count }, (_, i) =>
         fetch(`/api/node/block/${i}`, { cache: 'no-store' }).then(r => r.json()).catch(() => null)
       )
       const blocks = (await Promise.all(blockPromises)).filter(Boolean)
 
-      // Count blocks per proposer
       const proposerCount: Record<string, number> = {}
       for (const b of blocks) {
         const proposer = b.header?.proposer_id
@@ -69,13 +111,7 @@ export default function ValidatorsPage() {
         }
       }
 
-      // Merge known validators + discovered proposers
-      const allAddresses = new Set<string>([
-        ...KNOWN_VALIDATORS.map(v => v.address),
-        ...Object.keys(proposerCount),
-      ])
-
-      // Fetch balances for all validators
+      const allAddresses = new Set<string>(Object.keys(proposerCount))
       const validatorList: ValidatorData[] = []
       for (const address of allAddresses) {
         let balance: string | number = 0
@@ -87,42 +123,31 @@ export default function ValidatorsPage() {
           }
         } catch { /* skip */ }
 
-        const known = KNOWN_VALIDATORS.find(v => v.address === address)
         validatorList.push({
           address,
-          name: known?.name ?? shortHash(address, 6, 4),
+          name: shortHash(address, 6, 4),
           blocks_produced: proposerCount[address] || 0,
           balance,
-          uptime: 0, // calculated below
+          uptime: 0,
         })
       }
 
-      // Calculate relative uptime
       const maxBlocks = Math.max(...validatorList.map(v => v.blocks_produced), 1)
       for (const v of validatorList) {
         v.uptime = Math.round((v.blocks_produced / maxBlocks) * 100)
       }
-
-      // Sort by blocks produced desc
       validatorList.sort((a, b) => b.blocks_produced - a.blocks_produced)
-
       setValidators(validatorList)
       setLastUpdate(new Date())
     } catch {
-      // Use known validators as fallback
-      setValidators(KNOWN_VALIDATORS.map(v => ({
-        ...v,
-        blocks_produced: 0,
-        balance: 0,
-        uptime: 0,
-      })))
+      setValidators([])
     } finally {
       setLoading(false)
     }
   }, [])
 
   useEffect(() => {
-    fetchValidators()
+    fetchValidators().finally(() => setLoading(false))
     const interval = setInterval(fetchValidators, 30000)
     return () => clearInterval(interval)
   }, [fetchValidators])
@@ -250,7 +275,7 @@ export default function ValidatorsPage() {
         </h3>
         <p>Quantix uses a <span className="text-qtx-cyan">PBFT+PoS</span> hybrid consensus. Up to <span className="text-qtx-cyan">21 validators</span> form the active set per epoch, selected by stake weight. A minimum of <span className="text-qtx-cyan">32 QTX</span> stake is required to register as a validator.</p>
         <p>Consensus requires <span className="text-qtx-cyan">⌊2N/3⌋ + 1</span> votes for both prepare and commit phases, ensuring BFT safety with up to ⌊(N-1)/3⌋ Byzantine validators.</p>
-        <p className="text-xs text-qtx-dim">Uptime is calculated as blocks produced relative to the highest-producing validator in this session. Data is derived from on-chain block proposer fields.</p>
+        <p className="text-xs text-qtx-dim">Uptime is calculated as blocks produced relative to the highest-producing validator in this session. Data is fetched live from the node&apos;s <code>/validators</code> API endpoint.</p>
       </div>
     </div>
   )
