@@ -72,7 +72,9 @@ export default function ValidatorsPage() {
 
           validatorList.push({
             address,
-            name: v.node_id !== 'unknown' ? v.node_id : shortHash(address, 6, 4),
+            name: v.node_id !== 'unknown'
+              ? v.node_id.replace(/^Node-0\.0\.0\.0:324(\d\d)$/, (_, port) => `Node-${parseInt(port) - 40}`)
+              : shortHash(address, 6, 4),
             blocks_produced: v.blocks_produced,
             balance,
             uptime: 0, // calculated below
