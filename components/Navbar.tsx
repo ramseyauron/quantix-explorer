@@ -29,6 +29,7 @@ export default function Navbar() {
   const navLinks = [
     { href: "/", label: "Home" },
     { href: "/txs", label: "Transactions" },
+    { href: "/mempool", label: "Mempool" },
     { href: "/validators", label: "Validators" },
   ];
 
